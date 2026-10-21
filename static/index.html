@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snip: shorten any link</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✂️</text></svg>">
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#14161f;--muted:#6b7280;--line:#e5e7eb;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--err:#dc2626}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1017;--card:#171a24;--text:#eef0f6;--muted:#9aa3b2;--line:#262b3a;--brand:#818cf8;--brand2:#a78bfa;--ok:#34d399;--err:#f87171}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;padding:48px 16px}
+main{width:100%;max-width:640px}
+h1{font-size:2.2rem;margin:0 0 6px;letter-spacing:-.02em}
+h1 span{background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);margin:0 0 28px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14px 0 6px}
+label:first-child{margin-top:0}
+input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font-size:1rem}
+input:focus,select:focus{outline:2px solid var(--brand);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.row{grid-template-columns:1fr}}
+button{cursor:pointer;border:0;border-radius:10px;font-weight:600;font-size:1rem}
+.go{width:100%;margin-top:18px;padding:13px;color:#fff;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.go:disabled{opacity:.6;cursor:wait}
+#msg{min-height:1.3em;margin-top:12px;font-size:.9rem;color:var(--err)}
+.result{display:none;margin-top:16px;padding:14px;border:1px dashed var(--brand);border-radius:12px;align-items:center;gap:10px}
+.result.show{display:flex}
+.result a{flex:1;color:var(--brand);font-weight:600;word-break:break-all;text-decoration:none}
+.small{padding:8px 12px;font-size:.85rem;background:var(--bg);color:var(--text);border:1px solid var(--line)}
+h2{font-size:1.05rem;margin:30px 0 10px}
+.item{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:8px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.item .info{flex:1;min-width:0}
+.item .s{font-weight:600;color:var(--brand);text-decoration:none}
+.item .l{color:var(--muted);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clicks{font-size:.85rem;color:var(--ok);font-weight:600;white-space:nowrap}
+footer{margin-top:34px;text-align:center;color:var(--muted);font-size:.8rem}
+footer a{color:var(--muted)}
+.item-wrap{margin-bottom:8px}.item-wrap .item{margin-bottom:0}
+.item-wrap .item{flex-wrap:wrap}
+.danger{color:var(--err)}
+.panel{display:none;margin-top:6px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.panel.open{display:block}
+.chart{display:flex;gap:6px;align-items:flex-end;height:90px;margin-bottom:12px}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:.7rem;color:var(--muted)}
+.bar{width:100%;min-height:3px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--brand2),var(--brand))}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:.8rem}
+.chips b{color:var(--muted);font-weight:600;min-width:70px}
+.chip{padding:3px 9px;border-radius:99px;background:var(--bg);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<main>
+  <h1>✂️ <span>Snip</span></h1>
+  <p class="sub">Paste a long link, get a short one. Track clicks, set an expiry, pick your own alias.</p>
+
+  <div class="card">
+    <label for="url">Long URL</label>
+    <input id="url" type="url" placeholder="https://example.com/some/very/long/link" autocomplete="off">
+    <div class="row">
+      <div><label for="alias">Custom alias (optional)</label><input id="alias" placeholder="my-link" maxlength="32"></div>
+      <div><label for="ttl">Expires</label>
+        <select id="ttl"><option value="">Never</option><option value="3600">In 1 hour</option><option value="86400">In 1 day</option><option value="604800">In 7 days</option></select></div>
+    </div>
+    <button class="go" id="go">Shorten link</button>
+    <div id="msg" role="alert"></div>
+    <div class="result" id="result"><a id="short" target="_blank" rel="noopener"></a><button class="small" id="copy">Copy</button></div>
+  </div>
+
+  <h2 id="hist-title" style="display:none">Your recent links</h2>
+  <div id="history"></div>
+
+  <footer>Built with FastAPI, Redis and SQLite · <a href="/docs">API docs</a></footer>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const KEY = "snip:links";
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+const save = l => { try { localStorage.setItem(KEY, JSON.stringify(l.slice(0, 8))); } catch {} };
+
+async function shorten() {
+  const url = $("#url").value.trim(), alias = $("#alias").value.trim(), ttl = $("#ttl").value;
+  const msg = $("#msg"); msg.textContent = ""; $("#result").classList.remove("show");
+  if (!url) { msg.textContent = "Please enter a URL."; return; }
+  const body = { url };
+  if (alias) body.alias = alias;
+  if (ttl) body.ttl_seconds = Number(ttl);
+  $("#go").disabled = true;
+  try {
+    const r = await fetch("/api/shorten", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok) {
+      msg.textContent = r.status === 400 ? (d.detail || "That URL isn’t allowed.") : r.status === 409 ? "That alias is taken, try another."
+        : r.status === 429 ? "Too many requests. Please wait a minute."
+        : r.status === 422 ? "Enter a valid http(s) URL (alias: 3-32 letters, numbers, - or _)."
+        : "Something went wrong.";
+      return;
+    }
+    $("#short").textContent = d.short_url; $("#short").href = d.short_url;
+    $("#result").classList.add("show");
+    const links = load().filter(x => x.code !== d.code);
+    links.unshift({ code: d.code, short_url: d.short_url, long_url: d.long_url, token: d.delete_token });
+    save(links); render();
+  } catch { msg.textContent = "Network error."; }
+  finally { $("#go").disabled = false; }
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+async function render() {
+  const links = load(), box = $("#history");
+  box.replaceChildren();
+  $("#hist-title").style.display = links.length ? "block" : "none";
+  for (const l of links) {
+    const wrap = el("div", "item-wrap"), row = el("div", "item");
+    const info = el("div", "info");
+    const a = el("a", "s", l.short_url); a.href = l.short_url; a.target = "_blank"; a.rel = "noopener";
+    info.append(a, el("div", "l", l.long_url));
+    const clicks = el("span", "clicks", "…");
+    const panel = el("div", "panel");
+    const sb = el("button", "small", "Stats");
+    sb.onclick = () => { panel.classList.toggle("open"); if (panel.classList.contains("open")) stats(l.code, clicks, panel); };
+    row.append(info, clicks, sb);
+    if (l.token) {
+      const del = el("button", "small danger", "Delete");
+      del.onclick = () => remove(l);
+      row.append(del);
+    }
+    wrap.append(row, panel); box.append(wrap);
+    stats(l.code, clicks, panel);
+  }
+}
+
+async function stats(code, clicksEl, panel) {
+  try {
+    const r = await fetch("/api/stats/" + encodeURIComponent(code));
+    if (!r.ok) { clicksEl.textContent = "gone"; return; }
+    const d = await r.json();
+    clicksEl.textContent = d.total_clicks + (d.total_clicks === 1 ? " click" : " clicks");
+    if (panel.classList.contains("open")) drawPanel(panel, d);
+  } catch { clicksEl.textContent = "n/a"; }
+}
+
+function drawPanel(panel, d) {
+  panel.replaceChildren();
+  const max = Math.max(1, ...d.by_day.map(x => x.clicks));
+  const chart = el("div", "chart");
+  for (const x of d.by_day) {
+    const col = el("div", "col");
+    const bar = el("div", "bar"); bar.style.height = (x.clicks / max * 70) + "%"; bar.title = x.date + ": " + x.clicks;
+    col.append(el("span", "", String(x.clicks)), bar, el("span", "", x.date.slice(5)));
+    chart.append(col);
+  }
+  panel.append(el("div", "", "Clicks, last 7 days · " + d.clicks_last_24h + " in the last 24h"), chart);
+  for (const [label, items] of [["Browsers", d.browsers], ["Devices", d.devices], ["Referrers", d.referrers]]) {
+    if (!items.length) continue;
+    const row = el("div", "chips"); row.append(el("b", "", label));
+    for (const it of items) row.append(el("span", "chip", it.name + " · " + it.count));
+    panel.append(row);
+  }
+  if (d.expires_at) panel.append(el("div", "chips", "Expires: " + new Date(d.expires_at).toLocaleString()));
+}
+
+async function remove(l) {
+  if (!confirm("Delete " + l.short_url + "? It will stop working immediately.")) return;
+  try {
+    const r = await fetch("/api/links/" + encodeURIComponent(l.code), { method: "DELETE", headers: { "X-Token": l.token } });
+    if (r.ok || r.status === 404) { save(load().filter(x => x.code !== l.code)); render(); }
+    else alert("Couldn’t delete (" + r.status + ").");
+  } catch { alert("Network error."); }
+}
+
+$("#go").onclick = shorten;
+$("#url").addEventListener("keydown", e => { if (e.key === "Enter") shorten(); });
+$("#copy").onclick = async () => {
+  try { await navigator.clipboard.writeText($("#short").textContent); $("#copy").textContent = "Copied ✓"; }
+  catch { $("#copy").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("#copy").textContent = "Copy", 1500);
+};
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      RATE_LIMIT: "30"
+      RATE_WINDOW: "60"
+    volumes: ["snipdata:/data"]
+    depends_on: [redis]
+  redis:
+    image: redis:7-alpine
+volumes:
+  snipdata:
