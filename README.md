@@ -14,7 +14,7 @@
 <img width="923" height="852" alt="Screenshot 2026-10-21 071758" src="https://github.com/user-attachments/assets/7c078c81-63fc-47dc-9d26-aebe9b23a4db" />
 
 **Fig 1: Shorten a link.** Create a short link with an optional custom alias and expiry.
-
+---
 <img width="897" height="457" alt="Screenshot 2026-10-21 071829" src="https://github.com/user-attachments/assets/3ec2ec97-2543-4573-9e68-eeca1112c41b" />
 
 **Fig 2: Click analytics.** 7-day click trend with browser, device and referrer breakdowns.
