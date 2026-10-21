@@ -3,6 +3,23 @@
 > A production-style URL shortener with a clean web UI, Redis caching, rate limiting, and a click-analytics dashboard.
 > Built to demonstrate backend fundamentals: caching, API design, security, testing, and deployment.
 
+**🔗 Live demo:** [https://url-shortener-slj4.onrender.com](https://url-shortener-slj4.onrender.com) &nbsp;|&nbsp; **📖 API docs:** [https://url-shortener-slj4.onrender.com/docs](https://url-shortener-slj4.onrender.com/docs)
+
+*Hosted on a free tier, so the first load after idle can take 30–60 seconds to wake up.*
+
+![CI](https://github.com/hemeshwar09/URL-shortener/actions/workflows/ci.yml/badge.svg)
+
+## Screenshots
+
+<img width="923" height="852" alt="Screenshot 2026-10-21 071758" src="https://github.com/user-attachments/assets/7c078c81-63fc-47dc-9d26-aebe9b23a4db" />
+
+**Fig 1: Shorten a link.** Create a short link with an optional custom alias and expiry.
+
+<img width="897" height="457" alt="Screenshot 2026-10-21 071829" src="https://github.com/user-attachments/assets/3ec2ec97-2543-4573-9e68-eeca1112c41b" />
+
+**Fig 2: Click analytics.** 7-day click trend with browser, device and referrer breakdowns.
+---
+
 ## What it does
 
 Paste a long link and get a short one. Optionally pick a custom alias and an expiry time, then track how people use your link.
@@ -76,8 +93,8 @@ Interactive docs are available at `/docs`.
 ## Run locally
 
 ```bash
-git clone https://github.com/<your-username>/snip-url-shortener.git
-cd snip-url-shortener
+git clone https://github.com/hemeshwar09/URL-shortener.git
+cd URL-shortener
 pip install -r requirements.txt
 python -m uvicorn app.main:app --reload     # http://localhost:8000
 ```
@@ -98,15 +115,9 @@ python -m pytest -q
 redirects and expiry, cache hits, rate limiting, alias conflicts, blocked/internal URLs,
 token-protected deletion with cache invalidation, and the analytics breakdown.
 
-## Performance
+## Deployment
 
-Measured with [k6](https://k6.io) (`loadtest/k6.js`, 50 virtual users, 30 s):
-
-| Setup | Requests/sec | p99 latency |
-|---|---|---|
-| Without Redis | _TBD_ | _TBD_ |
-| With Redis cache | _TBD_ | _TBD_ |
-
+Deployed on Render as a Docker web service ([live site](https://url-shortener-slj4.onrender.com)). Free-tier hosting sleeps after inactivity and uses an ephemeral disk, so links reset on redeploy. Moving to managed Postgres would remove that limit.
 
 ## What I'd build next
 
@@ -118,4 +129,4 @@ Measured with [k6](https://k6.io) (`loadtest/k6.js`, 50 virtual users, 30 s):
 
 ## Author
 
-**Hemeshwar Reddy Avuthu**
+**Hemeshwar** · [GitHub](https://github.com/hemeshwar09)
